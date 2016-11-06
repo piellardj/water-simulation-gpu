@@ -17,6 +17,7 @@
 const float POS_RANGE = 10.0;
 const float VEL_RANGE = 10.0;
 
+
 /* Converts value stored in two color channels
    to float value in [0, 65535] */
 float fromBase256 (const vec2 digits)
@@ -36,41 +37,20 @@ vec2 toBase256 (float value)
     return vec2(strongComponent, weakComponent) / 255.0;
 }
 
-/* Gives value in [-range/2, range/2] */
-float colorToValue (const vec4 pixel, const float range)
+
+/* Gives value in [-RANGE,RANGE] */
+float vecToValue (const vec2 vec, const float RANGE)
 {
-    /* Read a normalized value */
-    float value = fromBase256(pixel.rg) / 65525.0;
-    /* Map it to the right range */
-    return (value - 0.5) * range;
+    /* Read normalized value then maps it */
+    float value = fromBase256(vec) / 65535.0;
+    return (value - 0.5) * RANGE;
 }
 
-/* Expects a value in [-range/2,range/2] */
-vec4 valueToColor (float value, const float range)
+/* Expects value in [-RANGE,RANGE] */
+vec2 valueToVec (float value, const float RANGE)
 {
-    /* First map value to [0,1] */
-    value = (value / range) + 0.5;
-    
-    /* Stretch it and store it */
-    return vec4(toBase256(65525.0*value), 0, 1);
+    /* Map the value to [0,65535] then store it */
+    value = 65535.0 * ((value / RANGE) + 0.5);
+    return toBase256(value);
 }
 
-float colorToPos(const vec4 pixel)
-{
-    return colorToValue(pixel, POS_RANGE);
-}
-
-float colorToVel(const vec4 pixel)
-{
-    return colorToValue(pixel, VEL_RANGE);
-}
-
-vec4 posToColor(const float value)
-{
-    return valueToColor(value, POS_RANGE);
-}
-
-vec4 velToColor(const float value)
-{
-    return valueToColor(value, VEL_RANGE);
-}

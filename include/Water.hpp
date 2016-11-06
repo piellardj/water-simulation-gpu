@@ -16,31 +16,29 @@ class Water
     public:
         Water (sf::Vector2u dimensions);
 
+        sf::Vector2u getBufferSize() const;
+
         /* Updates the water surface (Euler intergration) */
         void update (sf::Time const& time);
 
         /* Displays the water as seen from above, with diffraction and reflection */
         void draw (sf::Texture const& background,
-                   sf::RenderTarget& target);
+                   sf::RenderTarget& target) const;
 
         /* Initializes the water to be still */
         void init ();
 
-        /* Adds a small perturbation */
-        void touch (sf::Vector2i pos);
+        /* Adds a small perturbation.
+         * WARNING pos is expected to be normalized */
+        void touch (sf::Vector2f pos, float radius=20.f, float strength=0.9f);
 
     private:
-        const sf::Vector2f _bufferSize;
-
         unsigned int _currentIndex;
-        std::array<sf::RenderTexture, 2> _positions;
-        std::array<sf::RenderTexture, 2> _velocities;
+        std::array<sf::RenderTexture, 2> _buffers;
 
-        sf::Shader _initPositionShader;
-        sf::Shader _initVelocityShader;
-        sf::Shader _updateVelocityShader;
-        sf::Shader _updatePositionShader;
-        sf::Shader _displayShader;
+        sf::Shader _initShader;
+        mutable sf::Shader _displayShader;
+        sf::Shader _updateShader;
         sf::Shader _touchShader;
 };
 

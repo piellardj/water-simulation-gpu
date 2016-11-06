@@ -12,6 +12,16 @@
 
 #include "Water.hpp"
 
+/* Returns relative mouse position in the window (in [0,1]x[0,1]) */
+sf::Vector2f getRelativeMousePos (sf::Window const& window)
+{
+    sf::Vector2i mousePos = sf::Mouse::getPosition(window);
+    sf::Vector2f pos(mousePos.x, window.getSize().y - mousePos.y);
+    pos.x /= window.getSize().x;
+    pos.y /= window.getSize().y;
+    return pos;
+}
+
 int main()
 {
     /* Creation of the fixed dimensions window and the OpenGL 3+ context */
@@ -61,11 +71,11 @@ int main()
                 break;
                 case sf::Event::MouseButtonPressed:
                     if (event.mouseButton.button == sf::Mouse::Left)
-                        water.touch(sf::Mouse::getPosition(window));
+                        water.touch(getRelativeMousePos(window));
                 break;
                 case sf::Event::MouseMoved:
                     if (sf::Mouse::isButtonPressed(sf::Mouse::Left))
-                        water.touch(sf::Mouse::getPosition(window));
+                        water.touch(getRelativeMousePos(window), 10, 0.1);
                 break;
                 default:
                     break;

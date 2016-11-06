@@ -1,6 +1,6 @@
 #version 130
 
-uniform sampler2D oldPositions;
+uniform sampler2D oldBuffer;
 uniform vec2 bufferSize;
 
 uniform vec2 coords;
@@ -13,18 +13,22 @@ out vec4 fragColor;
 __UTILS__
 
 
+/* Pushes the water following a 2D cos curve */
 void main()
 {
     vec2 coordOnBuffer = gl_FragCoord.xy / bufferSize;
     
-    float pos = colorToPos(texture(oldPositions, coordOnBuffer));
-    
-    vec2 dCoord = coords - gl_FragCoord.xy;
+    vec2 dCoord = coords*bufferSize - gl_FragCoord.xy;
     float distance = length(dCoord);
-    if (distance < radius) {
-        distance = distance / radius * 3.1415;
-        pos -= POS_RANGE * strength * (cos(distance) + 1) / 4;
-    }
     
-    fragColor = posToColor(pos);
+    float r = distance / radius * 3.1415;
+    float dPos = -POS_RANGE * strength * (cos(r) + 1) / 4;
+    dPos *= step(distance, radius); //no perturbation outside the disk
+    
+    vec4 color = texture(oldBuffer, coordOnBuffer);
+    float pos = vecToValue(color.rg, POS_RANGE);
+    color.rg = valueToVec(pos + dPos, POS_RANGE);
+    //color.rg = valueToVec(pos + 0.1, POS_RANGE);
+    
+    fragColor = color;
 }

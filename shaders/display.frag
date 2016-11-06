@@ -1,6 +1,6 @@
 #version 130
 
-uniform sampler2D positions;
+uniform sampler2D buffer;
 uniform vec2 bufferSize;
 
 uniform sampler2D tilesTexture;
@@ -21,15 +21,15 @@ void main()
     
     /* Height and normal acquisition */
     // height: normalized, 0 = bottom, 1 = max 
-    float height = colorToPos(texture(positions, coordOnBuffer));
+    float height = vecToValue(texture(buffer, coordOnBuffer).rg, POS_RANGE);
     height = height / POS_RANGE + 0.5;
 
     vec3 normal;
-    normal.x = colorToPos(texture(positions, coordOnBuffer + pixelSize*vec2(1,0))) -
-               colorToPos(texture(positions, coordOnBuffer + pixelSize*vec2(-1,0)));
-    normal.y = colorToPos(texture(positions, coordOnBuffer + pixelSize*vec2(0,1))) -
-               colorToPos(texture(positions, coordOnBuffer + pixelSize*vec2(0,-1)));
-    normal.z = 2;
+    normal.x = vecToValue(texture(buffer, coordOnBuffer + pixelSize*vec2(1,0)).rg, POS_RANGE) -
+               vecToValue(texture(buffer, coordOnBuffer + pixelSize*vec2(-1,0)).rg, POS_RANGE);
+    normal.y = vecToValue(texture(buffer, coordOnBuffer + pixelSize*vec2(0,1)).rg, POS_RANGE) -
+               vecToValue(texture(buffer, coordOnBuffer + pixelSize*vec2(0,-1)).rg, POS_RANGE);
+    normal.z = 1;
     normal = normalize(normal);
     
     vec3 I = vec3(0,0,-1);
@@ -39,7 +39,7 @@ void main()
     
     /* Sparkles in a given direction */
     vec4 sparkleColor = vec4(1);
-    vec3 sparkleDir = normalize(vec3(1,1,6));
+    vec3 sparkleDir = normalize(vec3(1,1,4));
     float sparkleFactor = dot(reflected, sparkleDir);
     vec4 sparkle = sparkleColor * smoothstep(.95, 1, sparkleFactor);
     
@@ -53,6 +53,4 @@ void main()
     
     
     fragColor = sparkle + surfaceColor;
-    //fragColor = vec4(reflected,1);
-    //fragColor = height * vec4(1);
 }
