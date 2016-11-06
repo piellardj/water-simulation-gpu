@@ -15,6 +15,18 @@ As the simulation runs at 60 fps, sometimes the time frame between two simulatio
 
 # Algorithm
 The water surface is stored as a heightmap in a sf::Texture (FBO).
+It is subdivided in a grid, each node corresponding to a pixel in the buffer.
 
-blah blah
+A node holds two informations:
+* position: stored in red and green channels
+* velocity: stored in blue and alpha channels
+
+Each node is influenced by three forces:
+* "vertical spring": each node tends to come back to the mid-height level
+* surface tension: a node tends to be aligned with its four immediate neighbours
+* friction: constant multiplicative factor, lesser than 1, applied to velocity
+
+# COMPILATION
+This project expects SFML 2.3.2 to be installed on the machine.
+It also requires at least OpenGL 3.0 with support for shaders.
 
