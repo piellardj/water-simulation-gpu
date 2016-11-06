@@ -9,8 +9,8 @@ Press R to reset the simulation.
 As the simulation runs at 60 fps, sometimes the time frame between two simulation steps isn't small enough, resulting in instabilities.
 
 ![alt text](screenshots/screen0.png "Screenshot of a simulation")
-![alt text](screenshots/screen0.png "Screenshot of a simulation")
-![alt text](screenshots/screen0.png "Screenshot of a simulation")
+![alt text](screenshots/screen1.png "Screenshot of a simulation")
+![alt text](screenshots/screen2.png "Screenshot of a simulation")
 
 
 # Algorithm
