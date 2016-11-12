@@ -43,18 +43,18 @@ Since it is not allowed to read and write to the same texture at the same time, 
 
 Each node is influenced by three forces:
 * "vertical spring": each node tends to come back to the mid-height level
-* surface tension: a node tries align itself with its four immediate neighbours
+* surface tension: a node tries to align itself with its four immediate neighbours
 * friction: constant multiplicative factor applied to velocity, lesser than 1, so that the water stops moving eventually
 
 
 ## Rendering
 The rendering part has many visual parameters:
 * waves amplitude
-* average waterLevel
-* waterColor
+* average water level
+* water color
 * refraction factor
 * maximum view distance underwater
-
+* light direction (for specularity)
 
 For rendering I use a simplified heightmap:
 * RGB channels store the cell's normal, assuming an amplitude of 1
@@ -65,12 +65,13 @@ Adjusting this data to the actual amplitude is doable with a simple scaling.
 ### 2D rendering
 The rendering of the 2D scene does not involve any geometry.
 It is only normal mapping.
-Given a cell's height and normal, it is easy to compute location where to sample the ground texture.
+Given a cell's height and normal, it is easy to compute the refracted light ray and then where to sample the ground texture.
 
 ### 3D rendering
+The 3D rendering involves geometry, normal mapping, specularity, refraction, water opacity computation, Fresnel coefficients computation. Thus is quite computation intensive, more than the simulation itself.
+
 The water is displayed in the cube [0,1]x[0,1]x[0,1].
 Position (x,y,z) corresponds to the sample (x,y) of the heightmap.
-
 The rendering of the 3D scene is done in 2 steps.
 
 #### Surface rendering
@@ -81,7 +82,7 @@ The vertex shader reads the heightmap and adjusts their height.
 
 The fragment shader then does the normal mapping.
 
-### Cube sides rendering
+#### Cube sides rendering
 The cube sides a sent with a height of 1.
 To make them fit the surface geometry, the fragment shader simply discards any fragment higher than the height read on the heightmap.
  
