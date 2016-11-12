@@ -1,6 +1,6 @@
 # water-simulation-gpu
 Interactive water simulation running on GPU, using C++, SFML, OpenGL shaders.
-
+It features both 2D and 3D rendering, with refraction, specularity and computing of the patterns formed by light underwater.
 
 # Usage
 On the 2D render window:
@@ -68,7 +68,7 @@ It is only normal mapping.
 Given a cell's height and normal, it is easy to compute the refracted light ray and then where to sample the ground texture.
 
 ### 3D rendering
-The 3D rendering involves geometry, normal mapping, specularity, refraction, water opacity computation, Fresnel coefficients computation. Thus is quite computation intensive, more than the simulation itself.
+The 3D rendering involves geometry, normal mapping, specularity, refraction, water opacity computation, Fresnel coefficients computation and computation of the refracted light rays hitting the ground. Thus is quite computation intensive, more than the simulation itself.
 
 The water is displayed in the cube [0,1]x[0,1]x[0,1].
 Position (x,y,z) corresponds to the sample (x,y) of the heightmap.
@@ -86,6 +86,14 @@ The fragment shader then does the normal mapping.
 The cube sides a sent with a height of 1.
 To make them fit the surface geometry, the fragment shader simply discards any fragment higher than the height read on the heightmap.
  
+#### Refracted light rays computation
+On the bottom of the cube you can see the refracted light forming patterns just like in a real pool.
+
+These lights are computed on a separate texture, which is then added the the bare ground texture.
+To compute the patterns I consider light "particles", one particle corresponding to one or several light rays. I need many of them to approximate the phenomenon.
+
+The light particles are first placed uniformly as a grid on the water surface. Then in the vertex shader I change their position to the location where the light ray would hit the ground. Given the water normals and assuming the light rays come vertically, this is simply done by using refraction laws. I then draw the particle as a grey dot on the light texture.
+
 # COMPILATION
 This project expects SFML 2.3.2 to be installed on the machine.
 It also requires at least OpenGL 3.0 with support for shaders.
