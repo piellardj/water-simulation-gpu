@@ -2,11 +2,11 @@ SFML_PATH=extlibs/SFML-2.3.2/
 GLM_PATH=extlibs/glm/
 
 CC=g++
-CFLAGS=-Wall -Wextra -pedantic -O2 -Iinclude -I$(GLM_PATH) -I$(SFML_PATH)/include -L$(SFML_PATH)/lib -std=c++11
+CXXFLAGS=-Wall -Wextra -pedantic -O2 -Iinclude -I$(GLM_PATH) -I$(SFML_PATH)/include -L$(SFML_PATH)/lib -std=c++11
 tCFILES=$(wildcard src/*.cpp) $(wildcard src/*/*.cpp)
 CFILES=$(tCFILES:src/%=%)
 OFILES=$(CFILES:%.cpp=obj/%.o)
-EXEC=2D-water
+EXEC=water-simulation
 
 LIB=-lsfml-graphics -lsfml-window -lsfml-system -lGL -lGLEW
 
@@ -24,13 +24,12 @@ all: bin/$(EXEC)
 
 bin/$(EXEC): $(OFILES)
 	mkdir -p bin
-	$(CC) -o $@ $(CFLAGS) $(OFILES) $(LIB)
+	$(CC) -o $@ $(CXXFLAGS) $(OFILES) $(LIB)
 
 obj/%.o: src/%.cpp
-	mkdir -p obj/PostTreatment
-	$(CC) -o $@ -c $< $(CFLAGS)
+	mkdir -p obj
+	$(CC) -o $@ -c $< $(CXXFLAGS)
 
-	
 clean:
 	rm -rf obj
 

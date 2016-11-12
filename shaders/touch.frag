@@ -1,11 +1,15 @@
 #version 130
 
-uniform sampler2D oldBuffer;
-uniform vec2 bufferSize;
 
+uniform sampler2D oldGrid;
+uniform vec2 cellSize;
+
+// both coords and radius are in normalized grid coordinates
 uniform vec2 coords;
-uniform float strength;
 uniform float radius;
+
+// expected in [-1, 1]
+uniform float extremum;
 
 out vec4 fragColor;
 
@@ -13,22 +17,35 @@ out vec4 fragColor;
 __UTILS__
 
 
-/* Pushes the water following a 2D cos curve */
+/* Expects a parameter in [0,1].
+ * Garanteed bumpFunction(0) = 1,
+ *           bumpFuncion(1) = 0
+ */
+float bumpFunction (float param)
+{
+    /* Cosine */
+    float value = (cos(param*3.141592654) + 1) / 2;
+    return value * step(param, 1);
+}
+
+/* Pushes the water around coords following a 2D cos curve.
+ * Each fragment is supposed to be a grid cell.
+ */
 void main()
 {
-    vec2 coordOnBuffer = gl_FragCoord.xy / bufferSize;
+    /* Normalized coords */
+    vec2 coordsOnGrid = gl_FragCoord.xy * cellSize;
+    vec4 cellColor = texture(oldGrid, coordsOnGrid);
     
-    vec2 dCoord = coords*bufferSize - gl_FragCoord.xy;
-    float distance = length(dCoord);
+    /* First compute the displacement */
+    float distance = length(coords - coordsOnGrid);
+    float param = distance / radius;
+    float dHeight = 0.5 * POS_RANGE * extremum * bumpFunction(param);
     
-    float r = distance / radius * 3.1415;
-    float dPos = -POS_RANGE * strength * (cos(r) + 1) / 4;
-    dPos *= step(distance, radius); //no perturbation outside the disk
+    /* Then add it to the current height */
+    float height = vecToValue(cellColor.rg, POS_RANGE);
+    height += dHeight;
+    cellColor.rg = valueToVec(height, POS_RANGE);
     
-    vec4 color = texture(oldBuffer, coordOnBuffer);
-    float pos = vecToValue(color.rg, POS_RANGE);
-    color.rg = valueToVec(pos + dPos, POS_RANGE);
-    //color.rg = valueToVec(pos + 0.1, POS_RANGE);
-    
-    fragColor = color;
+    fragColor = cellColor;
 }

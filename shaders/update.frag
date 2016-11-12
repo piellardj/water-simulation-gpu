@@ -1,13 +1,14 @@
 #version 130
 
-uniform sampler2D oldBuffer;
-uniform vec2 bufferSize;
+
+uniform sampler2D oldGrid;
+uniform vec2 cellSize;
 
 uniform float dt;
 
-uniform float c = 20.0; //coherence
-uniform float k = 0.7;//.8; //raideur
-uniform float f = 0.995; //atténuation
+uniform float c = 20.0; //surface tension
+uniform float k = 0.2; // vertical spring's stiffness
+uniform float f = 0.995; //friction
 
 out vec4 fragColor;
 
@@ -15,31 +16,34 @@ out vec4 fragColor;
 __UTILS__
 
 
+/* Updates the fragment position and velocity.
+ * Each fragment is supposed to be a grid cell.
+ */
 void main()
 {
-    vec2 coordOnBuffer = gl_FragCoord.xy / bufferSize;
-    vec2 pixelSize = 1.0 / bufferSize;
-    vec4 color = texture(oldBuffer, coordOnBuffer);
+    /* Normalized coords */
+    vec2 coordsOnGrid = gl_FragCoord.xy * cellSize;
+    vec4 cellColor = texture(oldGrid, coordsOnGrid);
     
     /* Fetch current state */
-    float pos = vecToValue(color.rg, POS_RANGE);
-    float vel = vecToValue(color.ba, VEL_RANGE);
+    float pos = vecToValue(cellColor.rg, POS_RANGE);
+    float vel = vecToValue(cellColor.ba, VEL_RANGE);
     
     /* Update velocity */
     vel += -dt * k * pos; //vertical spring
     
-    float neighbours = vecToValue(texture(oldBuffer, coordOnBuffer + vec2(+1,0)*pixelSize).rg, POS_RANGE) +
-                       vecToValue(texture(oldBuffer, coordOnBuffer + vec2(0,+1)*pixelSize).rg, POS_RANGE) +
-                       vecToValue(texture(oldBuffer, coordOnBuffer + vec2(-1,0)*pixelSize).rg, POS_RANGE) +
-                       vecToValue(texture(oldBuffer, coordOnBuffer + vec2(0,-1)*pixelSize).rg, POS_RANGE);
-    neighbours *= 0.25;
+    float neighboursPos = vecToValue(texture(oldGrid, coordsOnGrid + vec2(cellSize.x, 0)).rg, POS_RANGE) +
+                          vecToValue(texture(oldGrid, coordsOnGrid - vec2(cellSize.x, 0)).rg, POS_RANGE) +
+                          vecToValue(texture(oldGrid, coordsOnGrid + vec2(0,cellSize.y)).rg, POS_RANGE) +
+                          vecToValue(texture(oldGrid, coordsOnGrid - vec2(0,cellSize.y)).rg, POS_RANGE);
+    neighboursPos *= 0.25;
     
-    vel += dt * c * (neighbours - pos); //surface tension
+    vel += dt * c * (neighboursPos - pos); //surface tension
     vel *= f; //attenuation
-    
     
     /* Update position */
     pos += dt * vel;
+    
     
     fragColor = vec4(valueToVec(pos, POS_RANGE),
                      valueToVec(vel, VEL_RANGE));

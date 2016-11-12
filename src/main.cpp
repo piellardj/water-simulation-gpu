@@ -11,6 +11,8 @@
 #include <GL/glew.h>
 
 #include "Water.hpp"
+#include "Renderer2D.hpp"
+
 
 /* Returns relative mouse position in the window (in [0,1]x[0,1]) */
 sf::Vector2f getRelativeMousePos (sf::Window const& window)
@@ -24,18 +26,19 @@ sf::Vector2f getRelativeMousePos (sf::Window const& window)
 
 int main()
 {
-    /* Creation of the fixed dimensions window and the OpenGL 3+ context */
-    sf::ContextSettings openGLContext(0, 0, 0, //no depth, no stencil, no antialiasing
-                                      3, 0, //openGL 3.0 requested
-                                      sf::ContextSettings::Default);
-    sf::RenderWindow window(sf::VideoMode(512, 512), "2D water",
-                            sf::Style::Titlebar | sf::Style::Close,
-                            openGLContext);
-    window.setVerticalSyncEnabled(true);
+    /* Creation of the windows and contexts */
+    sf::ContextSettings openGL2DContext(0, 0, 0, //no depth, no stencil, no antialiasing
+                                       3, 0, //openGL 3.0 requested
+                                       sf::ContextSettings::Default);
+    sf::RenderWindow window2D(sf::VideoMode(512,512), "2D water",
+                              sf::Style::Titlebar | sf::Style::Close,
+                              openGL2DContext);
+    window2D.setVerticalSyncEnabled(true);
+
 
     /* Checking if the requested OpenGL version is available */
-    std::cout << "openGL version: " << window.getSettings().majorVersion << "." << window.getSettings().minorVersion << std::endl << std::endl;
-    if (window.getSettings().majorVersion < 3) {
+    std::cout << "openGL version: " << window2D.getSettings().majorVersion << "." << window2D.getSettings().minorVersion << std::endl << std::endl;
+    if (window2D.getSettings().majorVersion < 3) {
         std::cerr << "This program requires at least OpenGL 3.0" << std::endl << std::endl;
         return EXIT_FAILURE;
     }
@@ -45,24 +48,40 @@ int main()
     }
     glewInit();
 
-    /* Loading of the image */
-    sf::Texture tilesTexture;
-    if (!tilesTexture.loadFromFile("rc/tiles.png"))
-        throw std::runtime_error("unable to open pic");
-    tilesTexture.setSmooth(true);
-    tilesTexture.setRepeated(true);
 
-    Water water(window.getSize());
+    /* Creation of the simulation */
+    float touchRadius = 0.03f;
+    float touchExtremum = -0.9f;
+    float friction = 0.99f;
+    float propagation = 20.f;
+    float elasticity = 0.7f;// 0.3f;
+    sf::Vector2u gridSize(512, 512);
+    Water water(gridSize, propagation, friction, elasticity);
 
-    float total = 0.f;
+
+    /* Creation of the renderers */
+    float amplitude = 0.1f;
+    float waterLevel = 0.5f;
+    float eta = 0.8f;
+    glm::vec4 waterColor(.1, .1, .6, 1);
+    float viewDistance = 3.f;
+    Renderer2D renderer2D (amplitude, waterLevel, eta, waterColor, viewDistance);
+
+    sf::Texture groundTexture;
+    if (!groundTexture.loadFromFile("rc/tiles.png"))
+        throw std::runtime_error("unable to open rc/tiles.png");
+    groundTexture.setSmooth(true);
+    groundTexture.setRepeated(true);
+
+    /* Main loop */
     int loops = 0;
     sf::Clock fpsCounter, clock;
-    while (window.isOpen()) {
+    while (window2D.isOpen()) {
         sf::Event event;
-        while (window.pollEvent(event)) {
+        while (window2D.pollEvent(event)) {
             switch (event.type) {
                 case sf::Event::Closed:
-                    window.close();
+                    window2D.close();
                 break;
                 case sf::Event::KeyReleased:
                     if (event.key.code == sf::Keyboard::R) {
@@ -71,11 +90,11 @@ int main()
                 break;
                 case sf::Event::MouseButtonPressed:
                     if (event.mouseButton.button == sf::Mouse::Left)
-                        water.touch(getRelativeMousePos(window));
+                        water.touch(getRelativeMousePos(window2D), touchRadius, touchExtremum);
                 break;
                 case sf::Event::MouseMoved:
                     if (sf::Mouse::isButtonPressed(sf::Mouse::Left))
-                        water.touch(getRelativeMousePos(window), 10, 0.1);
+                        water.touch(getRelativeMousePos(window2D), touchRadius, touchExtremum*0.1f);
                 break;
                 default:
                     break;
@@ -84,14 +103,18 @@ int main()
 
         sf::Time elapsedTime = clock.getElapsedTime();
         clock.restart();
-       // std::cout << elapsedTime.asSeconds() << std::endl;
 
-        window.clear(sf::Color::Green);
-        water.update(elapsedTime);
-        water.draw(tilesTexture, window);
-        window.display();
+        /* Simulation */
+        water.update(elapsedTime.asSeconds());
+        water.generateHeightmap();
 
-       // std::cout << 1.f / clock.getElapsedTime().asSeconds() << std::endl;
+        /* Rendering */
+        window2D.clear(sf::Color::Green);
+        window2D.setActive(true);
+        renderer2D.draw (water.getHeightmap(), groundTexture);
+        window2D.display();
+
+       // std::cout << 1.f / elapsedTime.asSeconds() << std::endl;
         ++loops;
 
     }

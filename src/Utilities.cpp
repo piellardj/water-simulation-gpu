@@ -20,9 +20,9 @@ void searchAndReplace (std::string const& tobeReplaced,
                        std::string const& replacement,
                        std::string& container)
 {
-  std::string::size_type pos = 0u;
-  while((pos = container.find(tobeReplaced, pos)) != std::string::npos){
-     container.replace(pos, tobeReplaced.length(), replacement);
-     pos += replacement.length();
-  }
+    std::string::size_type pos = 0u;
+    while((pos = container.find(tobeReplaced, pos)) != std::string::npos){
+        container.replace(pos, tobeReplaced.length(), replacement);
+        pos += replacement.length();
+    }
 }
