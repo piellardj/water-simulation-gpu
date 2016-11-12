@@ -4,6 +4,7 @@
 #include "Utilities.hpp"
 
 #include <iostream>
+#include <stdexcept>
 
 
 Renderer2D::Renderer2D(float amplitude,

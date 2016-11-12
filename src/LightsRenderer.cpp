@@ -4,6 +4,8 @@
 #include "Utilities.hpp"
 
 #include <iostream>
+#include <stdexcept>
+
 #include <SFML/Graphics/Sprite.hpp>
 #include <SFML/Graphics/RectangleShape.hpp>
 

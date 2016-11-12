@@ -4,6 +4,7 @@
 #include "Utilities.hpp"
 
 #include <iostream>
+#include <stdexcept>
 
 
 Renderer3D::Renderer3D(unsigned int quality,
