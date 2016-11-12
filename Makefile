@@ -3,6 +3,7 @@ GLM_PATH=extlibs/glm/
 
 CC=g++
 CXXFLAGS=-Wall -Wextra -pedantic -O2 -Iinclude -I$(GLM_PATH) -I$(SFML_PATH)/include -L$(SFML_PATH)/lib -std=c++11
+DEFINEGLAGS=
 tCFILES=$(wildcard src/*.cpp) $(wildcard src/*/*.cpp)
 CFILES=$(tCFILES:src/%=%)
 OFILES=$(CFILES:%.cpp=obj/%.o)
@@ -11,6 +12,7 @@ EXEC=water-simulation
 LIB=-lsfml-graphics -lsfml-window -lsfml-system -lGL -lGLEW
 
 ifdef DEBUG
+DEFINEFLAGS=-D DEBUG
 CFLAGS=-Wall -Wextra -pedantic -g -Iinclude -std=c++11
 LIB=-lsfml-graphics -lsfml-window -lsfml-system
 endif
@@ -24,11 +26,11 @@ all: bin/$(EXEC)
 
 bin/$(EXEC): $(OFILES)
 	mkdir -p bin
-	$(CC) -o $@ $(CXXFLAGS) $(OFILES) $(LIB)
+	$(CC) -o $@ $(CXXFLAGS) $(OFILES) $(LIB) $(DEFINEFLAGS)
 
 obj/%.o: src/%.cpp
 	mkdir -p obj
-	$(CC) -o $@ -c $< $(CXXFLAGS)
+	$(CC) -o $@ -c $< $(CXXFLAGS) $(DEFINEFLAGS)
 
 clean:
 	rm -rf obj

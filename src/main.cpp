@@ -12,7 +12,12 @@
 
 #include "Water.hpp"
 #include "Renderer2D.hpp"
+#include "Renderer3D.hpp"
+#include "LightsRenderer.hpp"
+#include "Camera.hpp"
 
+#define DISPLAY3D
+#define DISPLAYLIGHTS
 
 /* Returns relative mouse position in the window (in [0,1]x[0,1]) */
 sf::Vector2f getRelativeMousePos (sf::Window const& window)
@@ -33,8 +38,20 @@ int main()
     sf::RenderWindow window2D(sf::VideoMode(512,512), "2D water",
                               sf::Style::Titlebar | sf::Style::Close,
                               openGL2DContext);
-    window2D.setVerticalSyncEnabled(true);
+//    window2D.setVerticalSyncEnabled(true);
 
+#ifdef DISPLAY3D
+    sf::ContextSettings openGL3DContext(1, 0, 1, //depth, no stencil, antialiasing
+                                        3, 0, //openGL 3.0 requested
+                                        sf::ContextSettings::Default);
+    sf::RenderWindow window3D(sf::VideoMode(800, 600), "3D water",
+                              sf::Style::Titlebar,
+                              openGL3DContext);
+//    window3D.setVerticalSyncEnabled(true);
+    
+    window3D.setPosition(sf::Vector2i(0,0));
+    window2D.setPosition(sf::Vector2i(window3D.getSize().x,0));
+#endif //DISPLAY3D
 
     /* Checking if the requested OpenGL version is available */
     std::cout << "openGL version: " << window2D.getSettings().majorVersion << "." << window2D.getSettings().minorVersion << std::endl << std::endl;
@@ -62,11 +79,19 @@ int main()
     /* Creation of the renderers */
     float amplitude = 0.1f;
     float waterLevel = 0.5f;
-    float eta = 0.8f;
+    float eta = 0.9f;
     glm::vec4 waterColor(.1, .1, .6, 1);
     float viewDistance = 3.f;
     Renderer2D renderer2D (amplitude, waterLevel, eta, waterColor, viewDistance);
-
+#ifdef DISPLAY3D
+    Renderer3D renderer3D (64, 4.f*amplitude, waterLevel, eta, waterColor, viewDistance);
+    renderer3D.getCamera().setAspectRatio(window3D.getSize().x, window3D.getSize().y);
+    
+    sf::Vector2f mousePos3D = getRelativeMousePos(window3D);
+    bool updateCamera = false;
+#endif //DISPLAY3D
+    LightsRenderer lightsRenderer(128);
+    
     sf::Texture groundTexture;
     if (!groundTexture.loadFromFile("rc/tiles.png"))
         throw std::runtime_error("unable to open rc/tiles.png");
@@ -100,19 +125,67 @@ int main()
                     break;
             }
         }
+#ifdef DISPLAY3D
+        while (window3D.pollEvent(event)) {
+            switch (event.type) {
+                case sf::Event::MouseWheelScrolled:
+                {
+                    float distance = renderer3D.getCamera().getDistance();
+                    distance += 0.01f * event.mouseWheelScroll.delta;
+                    renderer3D.getCamera().setDistance(distance);
+                }
+                break;
+                case sf::Event::MouseMoved:
+                    if (sf::Mouse::isButtonPressed(sf::Mouse::Left)) {
+                        updateCamera = true;
+                    }
+                break;
+                default:
+                    break;
+            }
+        }
 
+        /* Adjustment of the 3D camera */
+        sf::Vector2f newMousePos3D = getRelativeMousePos(window3D);
+        if (updateCamera) {
+            updateCamera = false;
+
+            float latitude = renderer3D.getCamera().getLatitude();
+            float longitude = renderer3D.getCamera().getLongitude();
+
+            longitude -= 2.f * M_PI * (newMousePos3D.x - mousePos3D.x);
+            latitude -= 0.5f * M_PI * (newMousePos3D.y - mousePos3D.y);
+            latitude = std::max(0.f, latitude);
+
+            renderer3D.getCamera().setLatitude(latitude);
+            renderer3D.getCamera().setLongitude(longitude);
+        }
+        mousePos3D = newMousePos3D;
+#endif //DISPLAY3D
+        
         sf::Time elapsedTime = clock.getElapsedTime();
         clock.restart();
 
         /* Simulation */
         water.update(elapsedTime.asSeconds());
         water.generateHeightmap();
+#ifdef DISPLAYLIGHTS
+        lightsRenderer.update(water.getHeightmap());
+#endif //DISPLAYLIGHTS
 
         /* Rendering */
         window2D.clear(sf::Color::Green);
         window2D.setActive(true);
         renderer2D.draw (water.getHeightmap(), groundTexture);
         window2D.display();
+
+#ifdef DISPLAY3D
+        window3D.clear(sf::Color(0.2,0.2,0.2));
+        glViewport(0,0,window3D.getSize().x,window3D.getSize().y);
+        window3D.setActive(true);
+        renderer3D.draw (water.getHeightmap(), groundTexture, lightsRenderer.getTexture());
+        window3D.display();
+#endif //DISPLAY3D
 
        // std::cout << 1.f / elapsedTime.asSeconds() << std::endl;
         ++loops;
