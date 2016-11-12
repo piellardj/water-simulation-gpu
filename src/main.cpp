@@ -38,7 +38,7 @@ int main()
     sf::RenderWindow window2D(sf::VideoMode(512,512), "2D water",
                               sf::Style::Titlebar | sf::Style::Close,
                               openGL2DContext);
-//    window2D.setVerticalSyncEnabled(true);
+    window2D.setVerticalSyncEnabled(true);
 
 #ifdef DISPLAY3D
     sf::ContextSettings openGL3DContext(1, 0, 1, //depth, no stencil, antialiasing
@@ -47,7 +47,7 @@ int main()
     sf::RenderWindow window3D(sf::VideoMode(800, 600), "3D water",
                               sf::Style::Titlebar,
                               openGL3DContext);
-//    window3D.setVerticalSyncEnabled(true);
+    window3D.setVerticalSyncEnabled(true);
     
     window3D.setPosition(sf::Vector2i(0,0));
     window2D.setPosition(sf::Vector2i(window3D.getSize().x,0));
@@ -68,23 +68,23 @@ int main()
 
     /* Creation of the simulation */
     float touchRadius = 0.03f;
-    float touchExtremum = -0.9f;
-    float friction = 0.99f;
+    float touchExtremum = -0.8f;
+    float friction = 0.995f;
     float propagation = 20.f;
-    float elasticity = 0.7f;// 0.3f;
+    float elasticity =  0.7f;
     sf::Vector2u gridSize(512, 512);
     Water water(gridSize, propagation, friction, elasticity);
 
 
     /* Creation of the renderers */
-    float amplitude = 0.1f;
+    float amplitude = 0.2f;
     float waterLevel = 0.5f;
     float eta = 0.9f;
     glm::vec4 waterColor(.1, .1, .6, 1);
-    float viewDistance = 3.f;
+    float viewDistance = 1.5f;
     Renderer2D renderer2D (amplitude, waterLevel, eta, waterColor, viewDistance);
 #ifdef DISPLAY3D
-    Renderer3D renderer3D (64, 4.f*amplitude, waterLevel, eta, waterColor, viewDistance);
+    Renderer3D renderer3D (256, 2.f*amplitude, waterLevel, eta, waterColor, viewDistance);
     renderer3D.getCamera().setAspectRatio(window3D.getSize().x, window3D.getSize().y);
     
     sf::Vector2f mousePos3D = getRelativeMousePos(window3D);
