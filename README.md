@@ -23,7 +23,7 @@ On my integrated Intel chip, the simulation runs at 1000 fps with only the 2D re
 ![alt text](screenshots/screen2.png "Screenshot of a simulation")
 
 ![alt text](screenshots/screen3D_0.png "Screenshot of a simulation")
-![alt text](screenshots/screen3D_1.png "Screenshot of a simulation")
+![alt text](screenshots/screen3D_3.png "Screenshot of a simulation")
 ![alt text](screenshots/screen3D_2.png "Screenshot of a simulation")
 
 
