@@ -45,7 +45,7 @@ int main()
                                         3, 0, //openGL 3.0 requested
                                         sf::ContextSettings::Default);
     sf::RenderWindow window3D(sf::VideoMode(800, 600), "3D water",
-                              sf::Style::Titlebar,
+                              sf::Style::Titlebar | sf::Style::Resize,
                               openGL3DContext);
     window3D.setVerticalSyncEnabled(true);
     
@@ -90,7 +90,7 @@ int main()
     sf::Vector2f mousePos3D = getRelativeMousePos(window3D);
     bool updateCamera = false;
 #endif //DISPLAY3D
-    LightsRenderer lightsRenderer(128);
+    LightsRenderer lightsRenderer(256);
     
     sf::Texture groundTexture;
     if (!groundTexture.loadFromFile("rc/tiles.png"))
@@ -128,6 +128,10 @@ int main()
 #ifdef DISPLAY3D
         while (window3D.pollEvent(event)) {
             switch (event.type) {
+                case sf::Event::Resized:
+                    window3D.setView(sf::View(sf::FloatRect(0.f, 0.f, event.size.width, event.size.height)));
+                    renderer3D.getCamera().setAspectRatio(event.size.width, event.size.height);
+                break;
                 case sf::Event::MouseWheelScrolled:
                 {
                     float distance = renderer3D.getCamera().getDistance();
